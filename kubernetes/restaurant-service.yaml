@@ -28,16 +28,14 @@ spec:
                   name: app-config
                   key: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
           readinessProbe:
-            httpGet:
-              path: /actuator/health
+            tcpSocket:
               port: 8082
             initialDelaySeconds: 30
             periodSeconds: 10
           livenessProbe:
-            httpGet:
-              path: /actuator/health
+            tcpSocket:
               port: 8082
-            initialDelaySeconds: 40
+            initialDelaySeconds: 60
             periodSeconds: 20
 ---
 apiVersion: v1
