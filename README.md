@@ -53,9 +53,13 @@ graph TB
     REST -->|Register + Heartbeat| EUREKA
     GW -->|Register + Heartbeat| EUREKA
 
-    style GW fill:#f9f,stroke:#333,stroke-width:2px
-    style EUREKA fill:#ff9,stroke:#333,stroke-width:2px
-    style DB fill:#9cf,stroke:#333,stroke-width:2px
+    style GW fill:#E91E63,stroke:#333,stroke-width:2px,color:#fff
+    style EUREKA fill:#FFC107,stroke:#333,stroke-width:2px,color:#000
+    style DB fill:#2196F3,stroke:#333,stroke-width:2px,color:#fff
+    style ID fill:#4CAF50,stroke:#333,stroke-width:2px,color:#fff
+    style ON fill:#4CAF50,stroke:#333,stroke-width:2px,color:#fff
+    style REST fill:#4CAF50,stroke:#333,stroke-width:2px,color:#fff
+    style Client fill:#9C27B0,stroke:#333,stroke-width:2px,color:#fff
 ```
 
 ## Module Breakdown
@@ -75,6 +79,12 @@ graph LR
     E -->|heartbeat| S2
     E -->|heartbeat| S3
     E -->|heartbeat| S4
+
+    style E fill:#FFC107,stroke:#333,color:#000
+    style S1 fill:#4CAF50,stroke:#333,color:#fff
+    style S2 fill:#4CAF50,stroke:#333,color:#fff
+    style S3 fill:#4CAF50,stroke:#333,color:#fff
+    style S4 fill:#E91E63,stroke:#333,color:#fff
 ```
 
 - Annotated with `@EnableEurekaServer`
@@ -96,27 +106,33 @@ sequenceDiagram
     participant I as Identity Service
     participant DB as PostgreSQL
 
-    Note over C,DB: Registration Flow
-    C->>G: POST /auth/register {name, password, email}
-    G->>I: Forward (open endpoint, no auth needed)
-    I->>I: BCrypt hash password
-    I->>DB: Save UserCredential
-    DB-->>I: Saved
-    I-->>G: "user added to the system"
-    G-->>C: 200 OK
+    rect rgb(230, 245, 230)
+        Note over C,DB: Registration Flow
+        C->>G: POST /auth/register {name, password, email}
+        G->>I: Forward (open endpoint, no auth needed)
+        I->>I: BCrypt hash password
+        I->>DB: Save UserCredential
+        DB-->>I: Saved
+        I-->>G: "user added to the system"
+        G-->>C: 200 OK
+    end
 
-    Note over C,DB: Token Generation Flow
-    C->>G: POST /auth/token {username, password}
-    G->>I: Forward (open endpoint, no auth needed)
-    I->>I: Authenticate via AuthenticationManager
-    I->>I: Generate JWT (HS384, 30min expiry)
-    I-->>G: JWT Token
-    G-->>C: JWT Token
+    rect rgb(230, 235, 250)
+        Note over C,DB: Token Generation Flow
+        C->>G: POST /auth/token {username, password}
+        G->>I: Forward (open endpoint, no auth needed)
+        I->>I: Authenticate via AuthenticationManager
+        I->>I: Generate JWT (HS384, 30min expiry)
+        I-->>G: JWT Token
+        G-->>C: JWT Token
+    end
 
-    Note over C,DB: Token Validation Flow (Internal)
-    Note right of I: Called by Gateway filter
-    I->>I: Validate JWT signature + expiry
-    I-->>G: Valid / Invalid
+    rect rgb(250, 240, 230)
+        Note over C,DB: Token Validation Flow (Internal)
+        Note right of I: Called by Gateway filter
+        I->>I: Validate JWT signature + expiry
+        I-->>G: Valid / Invalid
+    end
 ```
 
 **API Endpoints:**
@@ -163,19 +179,25 @@ sequenceDiagram
     participant O as Online Service App
     participant R as Restaurant Service
 
-    C->>G: GET /online/home (with Bearer token)
-    G->>G: Validate JWT
-    G->>O: Forward request
-    O-->>G: "Welcome to Online App Service"
-    G-->>C: 200 OK
+    rect rgb(230, 245, 230)
+        Note over C,R: Simple Request
+        C->>G: GET /online/home (with Bearer token)
+        G->>G: Validate JWT
+        G->>O: Forward request
+        O-->>G: "Welcome to Online App Service"
+        G-->>C: 200 OK
+    end
 
-    C->>G: GET /online/{orderId} (with Bearer token)
-    G->>G: Validate JWT
-    G->>O: Forward request
-    O->>R: GET /restaurant/orders/status/{orderId}<br/>(via RestTemplate + LoadBalancer)
-    R-->>O: OrderResponseDTO
-    O-->>G: OrderResponseDTO
-    G-->>C: OrderResponseDTO JSON
+    rect rgb(250, 240, 230)
+        Note over C,R: Order Status Request
+        C->>G: GET /online/{orderId} (with Bearer token)
+        G->>G: Validate JWT
+        G->>O: Forward request
+        O->>R: GET /restaurant/orders/status/{orderId}<br/>(via RestTemplate + LoadBalancer)
+        R-->>O: OrderResponseDTO
+        O-->>G: OrderResponseDTO
+        G-->>C: OrderResponseDTO JSON
+    end
 ```
 
 **API Endpoints:**
@@ -202,8 +224,8 @@ graph LR
     O[Online Service App] -->|RestTemplate + @LoadBalanced| R[Restaurant Service]
     O -->|"http://RESTAURANT-SERVICE/restaurant/orders/status/{id}"| R
 
-    style O fill:#9f9,stroke:#333
-    style R fill:#f99,stroke:#333
+    style O fill:#4CAF50,stroke:#333,color:#fff
+    style R fill:#FF9800,stroke:#333,color:#fff
 ```
 
 The `@LoadBalanced` annotation on `RestTemplate` enables client-side load balancing. The service name `RESTAURANT-SERVICE` is resolved via Eureka to actual host:port.
@@ -228,7 +250,10 @@ graph TD
     M --> O2["9u71245h: HYDERABADI DUM BIRYANI<br/>PREPARING, 59min"]
     M --> O3["37jbd832: PANEER BUTTER MASALA<br/>DELIVERED, 0min"]
 
-    style M fill:#ff9,stroke:#333
+    style M fill:#FFC107,stroke:#333,color:#000
+    style D fill:#4CAF50,stroke:#333,color:#fff
+    style S fill:#4CAF50,stroke:#333,color:#fff
+    style C fill:#4CAF50,stroke:#333,color:#fff
 ```
 
 **API Endpoints:**
@@ -275,11 +300,13 @@ graph TB
     OPEN --> ID
     OPEN --> ON
 
-    style GW fill:#f9f,stroke:#333,stroke-width:2px
-    style U401 fill:#f66,stroke:#333
-    style F403 fill:#f96,stroke:#333
-    style OPEN fill:#9f9,stroke:#333
-    style SECURED fill:#ff9,stroke:#333
+    style GW fill:#E91E63,stroke:#333,stroke-width:2px,color:#fff
+    style U401 fill:#F44336,stroke:#333,color:#fff
+    style F403 fill:#FF9800,stroke:#333,color:#fff
+    style OPEN fill:#4CAF50,stroke:#333,color:#fff
+    style SECURED fill:#FFC107,stroke:#333,color:#000
+    style ROUTE fill:#2196F3,stroke:#333,color:#fff
+    style Client fill:#9C27B0,stroke:#333,color:#fff
 ```
 
 **Route Configuration (Spring Cloud Gateway 5.x format):**
@@ -325,9 +352,12 @@ flowchart TD
 
     C --> I
 
-    style E fill:#f66,color:#fff
-    style J fill:#f96,color:#fff
-    style I fill:#9f9
+    style E fill:#F44336,stroke:#333,color:#fff
+    style J fill:#FF9800,stroke:#333,color:#fff
+    style I fill:#4CAF50,stroke:#333,color:#fff
+    style A fill:#2196F3,stroke:#333,color:#fff
+    style B fill:#9C27B0,stroke:#333,color:#fff
+    style G fill:#4CAF50,stroke:#333,color:#fff
 ```
 
 **Open Endpoints (no auth required):**
@@ -358,7 +388,7 @@ sequenceDiagram
     participant REST as Restaurant Service<br/>:8082
     participant DB as PostgreSQL
 
-    rect rgb(200, 230, 200)
+    rect rgb(220, 240, 220)
         Note over User,DB: Phase 1: User Registration
         User->>GW: POST /auth/register
         GW->>GW: RouteValidator: /auth/register is open
@@ -370,7 +400,7 @@ sequenceDiagram
         GW-->>User: 200 OK
     end
 
-    rect rgb(200, 220, 240)
+    rect rgb(220, 230, 250)
         Note over User,DB: Phase 2: Token Generation
         User->>GW: POST /auth/token {username, password}
         GW->>GW: RouteValidator: /auth/token is open
@@ -383,7 +413,7 @@ sequenceDiagram
         GW-->>User: JWT token
     end
 
-    rect rgb(240, 220, 200)
+    rect rgb(250, 240, 220)
         Note over User,REST: Phase 3: Authenticated Request
         User->>GW: GET /online/home<br/>Authorization: Bearer {token}
         GW->>GW: RouteValidator: /online is secured
@@ -396,7 +426,7 @@ sequenceDiagram
         GW-->>User: 200 OK
     end
 
-    rect rgb(240, 200, 220)
+    rect rgb(250, 220, 240)
         Note over User,REST: Phase 4: Inter-Service Communication
         User->>GW: GET /online/37jbd832<br/>Authorization: Bearer {token}
         GW->>GW: AuthenticationFilter: validate JWT
@@ -429,9 +459,14 @@ flowchart LR
         G -->|"No"| I[401/403 Error]
     end
 
-    style D fill:#9f9,stroke:#333
-    style H fill:#9f9,stroke:#333
-    style I fill:#f66,stroke:#333,color:#fff
+    style D fill:#4CAF50,stroke:#333,color:#fff
+    style H fill:#4CAF50,stroke:#333,color:#fff
+    style I fill:#F44336,stroke:#333,color:#fff
+    style A fill:#9C27B0,stroke:#333,color:#fff
+    style E fill:#9C27B0,stroke:#333,color:#fff
+    style B fill:#E91E63,stroke:#333,color:#fff
+    style F fill:#E91E63,stroke:#333,color:#fff
+    style C fill:#2196F3,stroke:#333,color:#fff
 ```
 
 **JWT Structure:**
