@@ -9,11 +9,11 @@ A Spring Boot microservices-based food ordering platform with JWT authentication
 | Java | 25 |
 | Spring Boot | 4.1.1 |
 | Spring Cloud | 2025.1.3 |
-| Spring Security | 7.1.1 |
-| Spring Cloud Gateway | 5.0.3 |
-| Netflix Eureka | 4.3.3 |
-| JJWT (Java JWT) | 0.13.0 |
-| PostgreSQL | Runtime |
+| Spring Security | 7.x |
+| Spring Cloud Gateway | 5.0.x (WebFlux) |
+| Netflix Eureka | 4.3.x |
+| JJWT | 0.13.0 |
+| PostgreSQL | 18 |
 | Lombok | Latest |
 | Maven | 3.9+ |
 
@@ -150,7 +150,7 @@ sequenceDiagram
 | `AuthController` | REST endpoints for register, token, validate |
 | `AuthService` | Business logic: save user with BCrypt, delegate token ops |
 | `JwtService` | JWT generation & validation using JJWT 0.13.0 API |
-| `AuthConfig` | Spring Security 7.x config: STATELESS session, CSRF disabled |
+| `AuthConfig` | Spring Security config: STATELESS session, CSRF disabled |
 | `CustomUserDetailsService` | Loads user from PostgreSQL for Spring Security |
 | `CustomUserDetails` | Implements `UserDetails` with empty authorities |
 | `UserCredential` | JPA entity mapped to `user_credential` table |
@@ -213,7 +213,7 @@ sequenceDiagram
 |---|---|
 | `OnlineServiceAppController` | REST controller for customer endpoints |
 | `OnlineServiceAppService` | Business logic, delegates order lookup to client |
-| `RestaurantServiceClient` | Feign-style REST client using `RestTemplate` with `@LoadBalanced` |
+| `RestaurantServiceClient` | REST client using `RestTemplate` with `@LoadBalanced` |
 | `OnlineServiceAppConfig` | Configures `@LoadBalanced RestTemplate` for service discovery |
 | `OrderResponseDTO` | Data transfer object for order details |
 
@@ -309,7 +309,7 @@ graph TB
     style Client fill:#9C27B0,stroke:#333,color:#fff
 ```
 
-**Route Configuration (Spring Cloud Gateway 5.x format):**
+**Route Configuration:**
 
 ```yaml
 spring.cloud.gateway.server.webflux.routes:
@@ -332,8 +332,6 @@ spring.cloud.gateway.server.webflux.routes:
     predicates:
       - Path=/auth/**
 ```
-
-> **Important:** Spring Cloud Gateway 5.x (Spring Cloud 2025.0+) requires routes under `spring.cloud.gateway.server.webflux.routes`, NOT the legacy `spring.cloud.gateway.routes`.
 
 **Security Filter Flow:**
 
@@ -501,6 +499,7 @@ erDiagram
 | Online Service App | 8081 | http://localhost:8081 |
 | Restaurant Service | 8082 | http://localhost:8082 |
 | API Gateway | 8080 | http://localhost:8080 |
+| PostgreSQL | 5432 | localhost:5432 |
 
 ## Getting Started
 
@@ -683,23 +682,6 @@ kubectl port-forward svc/gateway-service 8080:8080 -n microservices-auth
 # Delete all resources
 kubectl delete namespace microservices-auth
 ```
-
----
-
-## Migration Notes (Spring Boot 4.x / Spring Cloud 2025.x)
-
-This project uses the latest Spring Boot and Spring Cloud versions which include several breaking changes from previous versions:
-
-| Change | Old | New |
-|---|---|---|
-| Gateway config prefix | `spring.cloud.gateway.routes` | `spring.cloud.gateway.server.webflux.routes` |
-| Gateway artifact | `spring-cloud-starter-gateway` | `spring-cloud-starter-gateway-server-webflux` |
-| Gateway module | `spring-cloud-gateway-server` | `spring-cloud-gateway-server-webflux` |
-| Jackson null-to-primitive | `FAIL_ON_NULL_FOR_PRIMITIVES: false` | `FAIL_ON_NULL_FOR_PRIMITIVES: true` (now rejects `null` → `int`) |
-| `UserDetails.getAuthorities()` | Allowed `null` return | Requires non-null `Collection` (use `Collections.emptyList()`) |
-| `HttpHeaders.containsKey()` | Available | Removed; use `getFirst()` instead |
-| `DaoAuthenticationProvider` | 2-arg constructor | 1-arg constructor only; use `setPasswordEncoder()` setter |
-| Session management | Default session creation | Explicit `SessionCreationPolicy.STATELESS` required for REST APIs |
 
 ## Project Structure
 
