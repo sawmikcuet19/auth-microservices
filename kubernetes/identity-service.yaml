@@ -66,4 +66,4 @@ spec:
   ports:
     - port: 9898
       targetPort: 9898
-  type: NodePort
+  type: ClusterIP
